@@ -1,0 +1,268 @@
+#!/bin/bash
+
+# 05/04/2023
+## END code for the rest of the MGS genes
+
+# using this older script as a reference:
+dx download scripts/get-snp-data.sh
+
+# Download the SNP information from the project folder
+dx download -r Emily-folder/MGSvar
+
+# Download and extract plink software
+wget https://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20221210.zip
+mkdir plink_linux_x86_64_20221210
+mv plink_linux_x86_64_20221210.zip plink_linux_x86_64_20221210
+cd plink_linux_x86_64_20221210
+unzip plink_linux_x86_64_20221210.zip
+cd ..
+
+# Set plink up so that it runs using $PLINK variable
+PLINK=$PWD/plink_linux_x86_64_20221210/plink
+
+# Check version (just to make sure it is working)
+$PLINK --version
+
+
+##########
+# CDC6
+##########
+
+# Create a bed file for extracting CDC6 SNPs 
+tail -n +2 MGSvar/CDC6_MGSvar.csv | awk -F ',' '{print $1, $2, $2, $4}' > CDC6_MGSvar.bed
+head CDC6_MGSvar.bed
+
+# Make a directory for all of the CDC6 MGSvar SNP data
+mkdir cdc6-MGSvar-snp-data
+
+# Use plink to extract the CDC6 SNP data and calculate allele frequencies (--freq)
+# Note that the exome data is already mounted in teh jupyter environ,ent, so no need to download it
+$PLINK --bfile /mnt/project/Bulk/Exome\ sequences/Population\ level\ exome\ OQFE\ variants\,\ PLINK\ format\ -\ final\ release/ukb23158_c17_b0_v1 --extract range CDC6_MGSvar.bed --recode A --out cdc6-MGSvar-snp-data/cdc6-MGSvar-snps --freq
+# Move the allele frequency data so that it doesn't get overwritten by the next step
+mv cdc6-MGSvar-snp-data/cdc6-MGSvar-snps.frq .
+
+### have discovered that there are no CDC6 MGS variants in the biobank - oh well!
+
+
+##########
+# DONSON
+##########
+
+# Create a bed file for extracting DONSON SNPs 
+tail -n +2 MGSvar/DONSON_MGSvar.csv | awk -F ',' '{print $1, $2, $2, $4}' > DONSON_MGSvar.bed
+head DONSON_MGSvar.bed
+
+# Make a directory for all of the DONSON MGSvar SNP data
+mkdir donson-MGSvar-snp-data
+
+# Use plink to extract the DONSON SNP data and calculate allele frequencies (--freq)
+# Note that the exome data is already mounted in teh jupyter environ,ent, so no need to download it
+$PLINK --bfile /mnt/project/Bulk/Exome\ sequences/Population\ level\ exome\ OQFE\ variants\,\ PLINK\ format\ -\ final\ release/ukb23158_c21_b0_v1 --extract range DONSON_MGSvar.bed --recode A --out donson-MGSvar-snp-data/donson-MGSvar-snps --freq
+# Move the allele frequency data so that it doesn't get overwritten by the next step
+mv donson-MGSvar-snp-data/donson-MGSvar-snps.frq .
+
+# Re-run the above, and get count-based allele information per SNP (--freqx)
+# NB: can't run --freq and --freqx at the same time, so need to run plink twice
+$PLINK --bfile /mnt/project/Bulk/Exome\ sequences/Population\ level\ exome\ OQFE\ variants\,\ PLINK\ format\ -\ final\ release/ukb23158_c21_b0_v1 --extract range DONSON_MGSvar.bed --recode A --out donson-MGSvar-snp-data/donson-MGSvar-snps --freqx
+# Move the allele frequenct data back to the DONSON output directory
+mv donson-MGSvar-snps.frq donson-MGSvar-snp-data/
+
+# have a look at the DONSON frequency data
+head donson-MGSvar-snp-data/*.f*
+# looks good
+
+# create plink-stule SNP ids so that only the SNPs of interest can be extracted
+cat MGSvar/DONSON_MGSvar.csv | awk -F ',' '{print $1 ":" $2 ":" $3 ":" $4}' > donson-MGSvar-snp-ids.txt
+
+# look at allele requency info for SNPs of interest
+grep -f donson-MGSvar-snp-ids.txt donson-MGSvar-snp-data/donson-MGSvar-snps.frq | head
+grep -f donson-MGSvar-snp-ids.txt donson-MGSvar-snp-data/donson-MGSvar-snps.frqx | head
+
+
+
+##########
+# GINS2_GINS3
+##########
+
+# Create a bed file for extracting GINS SNPs 
+tail -n +2 MGSvar/GINS2_GINS3_MGSvar.csv | awk -F ',' '{print $1, $2, $2, $4}' > GINS_MGSvar.bed
+head GINS_MGSvar.bed
+
+# Make a directory for all of the GINS MGSvar SNP data
+mkdir gins-MGSvar-snp-data
+
+# Use plink to extract the gins SNP data and calculate allele frequencies (--freq)
+# Note that the exome data is already mounted in teh jupyter environ,ent, so no need to download it
+$PLINK --bfile /mnt/project/Bulk/Exome\ sequences/Population\ level\ exome\ OQFE\ variants\,\ PLINK\ format\ -\ final\ release/ukb23158_c16_b0_v1 --extract range GINS_MGSvar.bed --recode A --out gins-MGSvar-snp-data/gins-MGSvar-snps --freq
+# Move the allele frequency data so that it doesn't get overwritten by the next step
+mv gins-MGSvar-snp-data/gins-MGSvar-snps.frq .
+
+# Re-run the above, and get count-based allele information per SNP (--freqx)
+# NB: can't run --freq and --freqx at the same time, so need to run plink twice
+$PLINK --bfile /mnt/project/Bulk/Exome\ sequences/Population\ level\ exome\ OQFE\ variants\,\ PLINK\ format\ -\ final\ release/ukb23158_c16_b0_v1 --extract range GINS_MGSvar.bed --recode A --out gins-MGSvar-snp-data/gins-MGSvar-snps --freqx
+# Move the allele frequenct data back to the GINS output directory
+mv gins-MGSvar-snps.frq gins-MGSvar-snp-data/
+
+# have a look at the GINS frequency data
+head gins-MGSvar-snp-data/*.f*
+# looks good
+
+# create plink-stule SNP ids so that only the SNPs of interest can be extracted
+cat MGSvar/GINS2_GINS3_MGSvar.csv | awk -F ',' '{print $1 ":" $2 ":" $3 ":" $4}' > gins-MGSvar-snp-ids.txt
+
+# look at allele requency info for SNPs of interest
+grep -f gins-MGSvar-snp-ids.txt gins-MGSvar-snp-data/gins-MGSvar-snps.frq | head
+grep -f gins-MGSvar-snp-ids.txt gins-MGSvar-snp-data/gins-MGSvar-snps.frqx | head
+
+
+
+##########
+# GMNN
+##########
+
+# Create a bed file for extracting GMNN SNPs 
+tail -n +2 MGSvar/GMNN_MGSvar.csv | awk -F ',' '{print $1, $2, $2, $4}' > GMNN_MGSvar.bed
+head GMNN_MGSvar.bed
+
+# Make a directory for all of the GMNN MGSvar SNP data
+mkdir gmnn-MGSvar-snp-data
+
+# Use plink to extract the gmnn SNP data and calculate allele frequencies (--freq)
+# Note that the exome data is already mounted in teh jupyter environ,ent, so no need to download it
+$PLINK --bfile /mnt/project/Bulk/Exome\ sequences/Population\ level\ exome\ OQFE\ variants\,\ PLINK\ format\ -\ final\ release/ukb23158_c6_b0_v1 --extract range GMNN_MGSvar.bed --recode A --out gmnn-MGSvar-snp-data/gmnn-MGSvar-snps --freq
+# Move the allele frequency data so that it doesn't get overwritten by the next step
+mv gmnn-MGSvar-snp-data/gmnn-MGSvar-snps.frq .
+
+### have discovered that there are no GMNN MGS variants in the biobank - oh well!
+
+
+
+##########
+# MCM5_CDC45
+##########
+
+# Create a bed file for extracting MCM5_CDC45 SNPs 
+tail -n +2 MGSvar/MCM5_CDC45_MGSvar.csv | awk -F ',' '{print $1, $2, $2, $4}' > MCM5_CDC45_MGSvar.bed
+head MCM5_CDC45_MGSvar.bed
+
+# Make a directory for all of the MCM5_CDC45 MGSvar SNP data
+mkdir mcm5-cdc45-MGSvar-snp-data
+
+# Use plink to extract the gmnn SNP data and calculate allele frequencies (--freq)
+# Note that the exome data is already mounted in teh jupyter environ,ent, so no need to download it
+$PLINK --bfile /mnt/project/Bulk/Exome\ sequences/Population\ level\ exome\ OQFE\ variants\,\ PLINK\ format\ -\ final\ release/ukb23158_c22_b0_v1 --extract range MCM5_CDC45_MGSvar.bed --recode A --out mcm5-cdc45-MGSvar-snp-data/mcm5-cdc45-MGSvar-snps --freq
+# Move the allele frequency data so that it doesn't get overwritten by the next step
+mv mcm5-cdc45-MGSvar-snp-data/mcm5-cdc45-MGSvar-snps.frq .
+
+# Re-run the above, and get count-based allele information per SNP (--freqx)
+# NB: can't run --freq and --freqx at the same time, so need to run plink twice
+$PLINK --bfile /mnt/project/Bulk/Exome\ sequences/Population\ level\ exome\ OQFE\ variants\,\ PLINK\ format\ -\ final\ release/ukb23158_c22_b0_v1 --extract range MCM5_CDC45_MGSvar.bed --recode A --out mcm5-cdc45-MGSvar-snp-data/mcm5-cdc45-MGSvar-snps --freqx
+# Move the allele frequenct data back to the MCM5_CDC45 output directory
+mv mcm5-cdc45-MGSvar-snps.frq mcm5-cdc45-MGSvar-snp-data/
+
+# have a look at the MCM5_CDC45 frequency data
+head mcm5-cdc45-MGSvar-snp-data/*.f*
+# looks good
+
+# create plink-stule SNP ids so that only the SNPs of interest can be extracted
+cat MGSvar/MCM5_CDC45_MGSvar.csv | awk -F ',' '{print $1 ":" $2 ":" $3 ":" $4}' > mcm5-cdc45-MGSvar-snp-ids.txt
+
+# look at allele requency info for SNPs of interest
+grep -f mcm5-cdc45-MGSvar-snp-ids.txt mcm5-cdc45-MGSvar-snp-data/mcm5-cdc45-MGSvar-snps.frq | head
+grep -f mcm5-cdc45-MGSvar-snp-ids.txt mcm5-cdc45-MGSvar-snp-data/mcm5-cdc45-MGSvar-snps.frqx | head
+
+
+##########
+# MCM7
+##########
+
+# Create a bed file for extracting MCM7 SNPs 
+tail -n +2 MGSvar/MCM7_MGSvar.csv | awk -F ',' '{print $1, $2, $2, $4}' > MCM7_MGSvar.bed
+head MCM7_MGSvar.bed
+
+# Make a directory for all of the MCM7 MGSvar SNP data
+mkdir mcm7-MGSvar-snp-data
+
+# Use plink to extract the gmnn SNP data and calculate allele frequencies (--freq)
+# Note that the exome data is already mounted in teh jupyter environ,ent, so no need to download it
+$PLINK --bfile /mnt/project/Bulk/Exome\ sequences/Population\ level\ exome\ OQFE\ variants\,\ PLINK\ format\ -\ final\ release/ukb23158_c7_b0_v1 --extract range MCM7_MGSvar.bed --recode A --out mcm7-MGSvar-snp-data/mcm7-MGSvar-snps --freq
+# Move the allele frequency data so that it doesn't get overwritten by the next step
+mv mcm7-MGSvar-snp-data/mcm7-MGSvar-snps.frq .
+
+# Re-run the above, and get count-based allele information per SNP (--freqx)
+# NB: can't run --freq and --freqx at the same time, so need to run plink twice
+$PLINK --bfile /mnt/project/Bulk/Exome\ sequences/Population\ level\ exome\ OQFE\ variants\,\ PLINK\ format\ -\ final\ release/ukb23158_c7_b0_v1 --extract range MCM7_MGSvar.bed --recode A --out mcm7-MGSvar-snp-data/mcm7-MGSvar-snps --freqx
+# Move the allele frequenct data back to the MCM7 output directory
+mv mcm7-MGSvar-snps.frq mcm7-MGSvar-snp-data/
+
+# have a look at the MCM5_CDC45 frequency data
+head mcm7-MGSvar-snp-data/*.f*
+# looks good
+
+# create plink-stule SNP ids so that only the SNPs of interest can be extracted
+cat MGSvar/MCM7_MGSvar.csv | awk -F ',' '{print $1 ":" $2 ":" $3 ":" $4}' > mcm7-MGSvar-snp-ids.txt
+
+# look at allele requency info for SNPs of interest
+grep -f mcm7-MGSvar-snp-ids.txt mcm7-MGSvar-snp-data/mcm7-MGSvar-snps.frq | head
+grep -f mcm7-MGSvar-snp-ids.txt mcm7-MGSvar-snp-data/mcm7-MGSvar-snps.frqx | head
+
+
+##########
+# ORC4
+##########
+
+# Create a bed file for extracting ORC4 SNPs 
+tail -n +2 MGSvar/ORC4_MGSvar.csv | awk -F ',' '{print $1, $2, $2, $4}' > ORC4_MGSvar.bed
+head ORC4_MGSvar.bed
+
+# Make a directory for all of the ORC4 MGSvar SNP data
+mkdir orc4-MGSvar-snp-data
+
+# Use plink to extract the gmnn SNP data and calculate allele frequencies (--freq)
+# Note that the exome data is already mounted in teh jupyter environ,ent, so no need to download it
+$PLINK --bfile /mnt/project/Bulk/Exome\ sequences/Population\ level\ exome\ OQFE\ variants\,\ PLINK\ format\ -\ final\ release/ukb23158_c2_b0_v1 --extract range ORC4_MGSvar.bed --recode A --out orc4-MGSvar-snp-data/orc4-MGSvar-snps --freq
+# Move the allele frequency data so that it doesn't get overwritten by the next step
+mv orc4-MGSvar-snp-data/orc4-MGSvar-snps.frq .
+
+# Re-run the above, and get count-based allele information per SNP (--freqx)
+# NB: can't run --freq and --freqx at the same time, so need to run plink twice
+$PLINK --bfile /mnt/project/Bulk/Exome\ sequences/Population\ level\ exome\ OQFE\ variants\,\ PLINK\ format\ -\ final\ release/ukb23158_c2_b0_v1 --extract range ORC4_MGSvar.bed --recode A --out orc4-MGSvar-snp-data/orc4-MGSvar-snps --freqx
+# Move the allele frequenct data back to the MCM7 output directory
+mv orc4-MGSvar-snps.frq orc4-MGSvar-snp-data/
+
+# have a look at the ORC4 frequency data
+head orc4-MGSvar-snp-data/*.f*
+# looks good
+
+# create plink-stule SNP ids so that only the SNPs of interest can be extracted
+cat MGSvar/ORC4_MGSvar.csv | awk -F ',' '{print $1 ":" $2 ":" $3 ":" $4}' > orc4-MGSvar-snp-ids.txt
+
+# look at allele requency info for SNPs of interest
+grep -f orc4-MGSvar-snp-ids.txt orc4-MGSvar-snp-data/orc4-MGSvar-snps.frq | head
+grep -f orc4-MGSvar-snp-ids.txt orc4-MGSvar-snp-data/orc4-MGSvar-snps.frqx | head
+
+
+
+
+##################
+# Upload data
+##################
+
+# Create date-based folder and move results there
+DATE=20230405 
+mkdir plink-snp-data-$DATE
+mv orc* plink-snp-data-$DATE
+mv ORC* plink-snp-data-$DATE
+mv mcm* plink-snp-data-$DATE
+mv MCM* plink-snp-data-$DATE
+mv gins* plink-snp-data-$DATE
+mv GINS* plink-snp-data-$DATE
+mv donson* plink-snp-data-$DATE
+mv DONSON* plink-snp-data-$DATE
+
+# Upload back to the project
+dx upload -r plink-snp-data-$DATE
+
+# Put things back how they were
+mv plink-snp-data-$DATE/* .
+rmdir plink-snp-data-$DATE
