@@ -19,7 +19,9 @@
 
 #### pathvar cohort creation
 * path_script (extract UKB participant IDs for pathvar cohort)
-* pathvar_script_END (annotation of pathvar cohort)
+* pathvar_script_END (annotation of pathvar cohort pt.1)
+* variants_genes_script (creation of variant gene name reference files)
+* EntireCohort_pathvar_script (annotation of pathvar cohort pt.2)
 
 #### UKB cohort creation
 * EntireCohort_script (UKB cohort data cleaning and creation of derived variables)
